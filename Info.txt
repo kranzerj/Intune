@@ -1,0 +1,3 @@
+detect if Jabra audio devices are installed on the computer
+
+no automatic fix (show as "Remediation status: Recurred" in device status monitor
