@@ -1,2 +1,2 @@
-Group Tags a exisitng
-
+Group Tags are existing
+[[images/gt.png]]
