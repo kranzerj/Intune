@@ -1,2 +1,2 @@
 Group Tags are existing
-[[images/gt.png]]
+![](images/gt.png)
