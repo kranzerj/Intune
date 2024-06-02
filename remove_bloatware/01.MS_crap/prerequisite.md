@@ -5,3 +5,5 @@ deployment profiles (in my case via Group tag LP-AZ24_DE_) and the script (in my
 ![](images/g1.png)
 (device.devicePhysicalIds -any (_ -contains "[OrderID]:APDD"))
 ![](images/g2.png)
+(device.devicePhysicalIds -any (_ -contains "[OrderID]:LP-AZ24_DE_"))
+
