@@ -25,3 +25,20 @@ $autoMountTeamSitesList.GetEnumerator() | ForEach-Object {
         
     Set-ItemProperty -Path $tenantAutoMountRegKey -Name $PSItem.Key -Value $PSItem.Value -ErrorAction Stop
 }
+
+# speed up connection
+$regPath = "HKCU:\Software\Microsoft\OneDrive\Accounts\Business1"
+$regName = "TimerAutoMount"
+$regValue = @(0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
+if (-not (Test-Path $regPath)) {
+    # Erstellen des Registrierungspfades, falls er nicht existiert
+    New-Item -Path $regPath -Force
+}
+if (-not (Get-ItemProperty -Path $regPath -Name $regName -ErrorAction SilentlyContinue)) {
+    # Erstellen des Registrierungseintrags, falls er nicht existiert
+    New-ItemProperty -Path $regPath -Name $regName -Value $regValue -PropertyType Binary -Force
+    Write-Output "Registrierungseintrag 'TimerAutoMount' wurde erstellt."
+} else {
+    Write-Output "Registrierungseintrag 'TimerAutoMount' existiert bereits."
+}
+
