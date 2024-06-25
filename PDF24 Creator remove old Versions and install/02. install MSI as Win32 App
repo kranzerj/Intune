@@ -1,0 +1,2 @@
+Install command: msiexec /i "pdf24-creator-11.18.0-x64.msi" AUTOUPDATE=No DESKTOPICONS=Yes FAXPRINTER=No REGISTERREADER=No /QN
+Dependencies: first App (script for remove)

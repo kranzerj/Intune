@@ -1,9 +1,0 @@
-Please specify the setup file: install_11.18_remove_old_versions.ps1
-
-Install: %windir%\sysnative\WindowsPowerShell\v1.0\powershell.exe -Executionpolicy Bypass .\install_11.18_remove_old_versions.ps1
-Remove: msiexec /x "{413CE49E-D2B7-4154-B202-6C38BE168C22}" /qn
-
-detection File C:\Program Files\PDF24\    pdf24-Launcher.exe    Version    is  11.18.0.0
-
-
-
