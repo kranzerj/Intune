@@ -1,6 +1,9 @@
-#creats a SharePoint Mount PowerShell Script like https://github.com/tabs-not-spaces/CodeDump/blob/master/Sync-SharepointFolder/Sync-SharepointFolder.ps1  and assisted at the necessary steps
+#creates a SharePoint Mount PowerShell Script like https://github.com/tabs-not-spaces/CodeDump/blob/master/Sync-SharepointFolder/Sync-SharepointFolder.ps1  and assisted at the necessary steps
 #GNU General Public License v3.0
 #https://github.com/kranzerj/Intune/tree/main/automatischer%20SP_sync%20ersteller
+#ChatGPT 4o mini
+
+
 
 import os
 import urllib.parse
@@ -15,13 +18,21 @@ def process_url(url):
     # Extrahiere Parameter aus der URL
     site_id = url.split("&siteId={")[1].split("}")[0]
     web_id = url.split("&webId={")[1].split("}")[0]
-    list_id = url.split("&listId=")[1].split("&webUrl=")[0]
+    
+    # Trenne listId und optional folderId
+    list_id_part = url.split("&listId=")[1].split("&")[0]
+    list_id = list_id_part.split("&folderId=")[0]  # ListId bis zur folderId
+    folder_id = None
+    if "&folderId=" in url:
+        folder_id = url.split("&folderId=")[1].split("&")[0]
+    
     web_url = url.split("webUrl=")[1].split("&version=1")[0]
     kurzname = url.split("sharepoint.com/sites/")[1].split("&version=1")[0]
 
-    return site_id, web_id, list_id, web_url, kurzname
+    return site_id, web_id, list_id, web_url, kurzname, folder_id
 
 def create_powershell_script(params):
+    # Baue das PowerShell-Skript mit Platzhaltern für Parameter
     ps_script = f"""
 #based on: https://github.com/tabs-not-spaces/CodeDump/blob/master/Sync-SharepointFolder/Sync-SharepointFolder.ps1 
 #region Functions
@@ -34,7 +45,8 @@ function Sync-SharepointLocation {{
         [string]$webUrl,
         [string]$webTitle,
         [string]$listTitle,
-        [string]$syncPath
+        [string]$syncPath,
+        [string]$folderId
     )
     try {{
         Add-Type -AssemblyName System.Web
@@ -44,11 +56,16 @@ function Sync-SharepointLocation {{
         [string]$listId = [System.Web.HttpUtility]::UrlEncode($listId)
         [string]$userEmail = [System.Web.HttpUtility]::UrlEncode($userEmail)
         [string]$webUrl = [System.Web.HttpUtility]::UrlEncode($webUrl)
+        [string]$folderId = [System.Web.HttpUtility]::UrlEncode($folderId)
         #build the URI
         $uri = New-Object System.UriBuilder
         $uri.Scheme = "odopen"
         $uri.Host = "sync"
         $uri.Query = "siteId={params['siteId']}&webId={params['webId']}&listId={params['listId']}&userEmail=$userEmail&webUrl={params['webUrl']}&listTitle={params['listTitle']}&webTitle={params['webTitle']}"
+        # Wenn der folderId vorhanden ist, füge ihn hinzu
+        if ($folderId) {{
+            $uri.Query += "&folderId={params['folderId']}"
+        }}
         #launch the process from URI
         Write-Host $uri.ToString()
         start-process -filepath $($uri.ToString())
@@ -84,6 +101,7 @@ try {{
         webTitle  = "{params['webTitle']}"
         listTitle = "{params['listTitle']}"
         entraidname = "{params['entraidname']}"
+        folderId  = "{params.get('folderId', '')}"
     }}
     $params.syncPath  = "$(split-path $env:onedrive)\\$($params.entraidname)\\$($params.webTitle) - $($Params.listTitle)"
     Write-Host "SharePoint params:"
@@ -119,11 +137,11 @@ finally {{
 def main():
     web_title = get_input("Name der SharePoint Bibliothek (z.B.: Kunde 123 Datenaustausch) eingeben: ")
     list_title = get_input("Name der SharePoint Seite (z.B.: Documents) eingeben: ")
-    entraid_name = get_input("Name des Entra ID Tenant (z.B: COUNT IT) ")
+    entraid_name = get_input("Name des Entra ID Tenant (z.B.: COUNT IT) eingeben: ")
     url = get_input("Bibliotheks ID URL eingeben: ")
 
     # Verarbeite die URL
-    site_id, web_id, list_id, web_url, kurzname = process_url(url)
+    site_id, web_id, list_id, web_url, kurzname, folder_id = process_url(url)
 
     params = {
         "siteId": site_id,
@@ -133,7 +151,8 @@ def main():
         "kurzname": kurzname,
         "webTitle": web_title,
         "listTitle": list_title,
-        "entraidname": entraid_name
+        "entraidname": entraid_name,
+        "folderId": folder_id
     }
 
     # Prüfe, ob der Ordner existiert, andernfalls erstellen
