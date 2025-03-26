@@ -61,10 +61,10 @@ function Sync-SharepointLocation {{
         $uri = New-Object System.UriBuilder
         $uri.Scheme = "odopen"
         $uri.Host = "sync"
-        $uri.Query = "siteId={params['siteId']}&webId={params['webId']}&listId={params['listId']}&userEmail=$userEmail&webUrl={params['webUrl']}&listTitle={params['listTitle']}&webTitle={params['webTitle']}"
+        $uri.Query = "siteId=$siteId&webId=$webId&listId=$listId&userEmail=$userEmail&webUrl=$webUrl&listTitle=$listTitle&webTitle=$webTitle"
         # Wenn der folderId vorhanden ist, füge ihn hinzu
         if ($folderId) {{
-            $uri.Query += "&folderId={params['folderId']}"
+            $uri.Query += "&folderId=$folderId"
         }}
         #launch the process from URI
         Write-Host $uri.ToString()
