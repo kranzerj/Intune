@@ -1,5 +1,6 @@
 #creats a SharePoint Mount PowerShell Script like https://github.com/tabs-not-spaces/CodeDump/blob/master/Sync-SharepointFolder/Sync-SharepointFolder.ps1  and assisted at the necessary steps
 #GNU General Public License v3.0
+#https://github.com/kranzerj/Intune/tree/main/automatischer%20SP_sync%20ersteller
 
 import os
 import urllib.parse
