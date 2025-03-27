@@ -33,7 +33,9 @@ def process_url(url):
 
 def create_powershell_script(params):
     # Baue das PowerShell-Skript mit Platzhaltern für Parameter
-    ps_script = f"""
+    # Nur wenn folderId vorhanden ist, wird es in das PowerShell Skript aufgenommen
+    if params['folderId']:
+        ps_script = f"""
 #based on: https://github.com/tabs-not-spaces/CodeDump/blob/master/Sync-SharepointFolder/Sync-SharepointFolder.ps1 
 #region Functions
 function Sync-SharepointLocation {{
@@ -61,11 +63,7 @@ function Sync-SharepointLocation {{
         $uri = New-Object System.UriBuilder
         $uri.Scheme = "odopen"
         $uri.Host = "sync"
-        $uri.Query = "siteId=$siteId&webId=$webId&listId=$listId&userEmail=$userEmail&webUrl=$webUrl&listTitle=$listTitle&webTitle=$webTitle"
-        # Wenn der folderId vorhanden ist, füge ihn hinzu
-        if ($folderId) {{
-            $uri.Query += "&folderId=$folderId"
-        }}
+        $uri.Query = "siteId=$siteId&webId=$webId&listId=$listId&userEmail=$userEmail&folderId=$folderId&webUrl=$webUrl&listTitle=$listTitle&webTitle=$webTitle"
         #launch the process from URI
         Write-Host $uri.ToString()
         start-process -filepath $($uri.ToString())
@@ -101,7 +99,100 @@ try {{
         webTitle  = "{params['webTitle']}"
         listTitle = "{params['listTitle']}"
         entraidname = "{params['entraidname']}"
-        folderId  = "{params.get('folderId', '')}"
+        folderId  = "{params['folderId']}"
+    }}
+    $params.syncPath  = "$(split-path $env:onedrive)\\$($params.entraidname)\\$($params.webTitle) - $($Params.listTitle)"
+    Write-Host "SharePoint params:"
+    $params | Format-Table
+    if (!(Test-Path $($params.syncPath))) {{
+        Write-Host "Sharepoint folder not found locally, will now sync.." -ForegroundColor Yellow
+        $sp = Sync-SharepointLocation @params
+        if (!($sp)) {{
+            Throw "Sharepoint sync failed."
+        }}
+    }}
+    else {{
+        Write-Host "Location already syncronized: $($params.syncPath)" -ForegroundColor Yellow
+    }}
+    #endregion
+}}
+catch {{
+    $errorMsg = $_.Exception.Message
+}}
+finally {{
+    if ($errorMsg) {{
+        Write-Warning $errorMsg
+        Throw $errorMsg
+    }}
+    else {{
+        Write-Host "Completed successfully.."
+    }}
+}}
+#endregion
+"""
+    else:
+        ps_script = f"""
+#based on: https://github.com/tabs-not-spaces/CodeDump/blob/master/Sync-SharepointFolder/Sync-SharepointFolder.ps1 
+#region Functions
+function Sync-SharepointLocation {{
+    param (
+        [guid]$siteId,
+        [guid]$webId,
+        [guid]$listId,
+        [mailaddress]$userEmail,
+        [string]$webUrl,
+        [string]$webTitle,
+        [string]$listTitle,
+        [string]$syncPath
+    )
+    try {{
+        Add-Type -AssemblyName System.Web
+        #Encode site, web, list, url & email
+        [string]$siteId = [System.Web.HttpUtility]::UrlEncode($siteId)
+        [string]$webId = [System.Web.HttpUtility]::UrlEncode($webId)
+        [string]$listId = [System.Web.HttpUtility]::UrlEncode($listId)
+        [string]$userEmail = [System.Web.HttpUtility]::UrlEncode($userEmail)
+        [string]$webUrl = [System.Web.HttpUtility]::UrlEncode($webUrl)
+        #build the URI
+        $uri = New-Object System.UriBuilder
+        $uri.Scheme = "odopen"
+        $uri.Host = "sync"
+        $uri.Query = "siteId=$siteId&webId=$webId&listId=$listId&userEmail=$userEmail&webUrl=$webUrl&listTitle=$listTitle&webTitle=$webTitle"
+        #launch the process from URI
+        Write-Host $uri.ToString()
+        start-process -filepath $($uri.ToString())
+    }}
+    catch {{
+        $errorMsg = $_.Exception.Message
+    }}
+    if ($errorMsg) {{
+        Write-Warning "Sync failed."
+        Write-Warning $errorMsg
+    }}
+    else {{
+        Write-Host "Sync completed."
+        while (!(Get-ChildItem -Path $syncPath -ErrorAction SilentlyContinue)) {{
+            Start-Sleep -Seconds 2
+            write-host $syncPath
+        }}
+        return $true
+    }}    
+}}
+#endregion
+#region Main Process
+try {{
+    #region Sharepoint Sync
+    [mailaddress]$userUpn = cmd /c "whoami/upn"
+    $params = @{{
+        #replace with data captured from your sharepoint site.
+        siteId    = "{params['siteId']}"
+        webId     = "{params['webId']}"
+        listId    = "{params['listId']}"
+        userEmail = $userUpn
+        webUrl    = "{params['webUrl']}"
+        webTitle  = "{params['webTitle']}"
+        listTitle = "{params['listTitle']}"
+        entraidname = "{params['entraidname']}"
     }}
     $params.syncPath  = "$(split-path $env:onedrive)\\$($params.entraidname)\\$($params.webTitle) - $($Params.listTitle)"
     Write-Host "SharePoint params:"
@@ -137,7 +228,7 @@ finally {{
 def main():
     web_title = get_input("Name der SharePoint Bibliothek (z.B.: Kunde 123 Datenaustausch) eingeben: ")
     list_title = get_input("Name der SharePoint Seite (z.B.: Documents) eingeben: ")
-    entraid_name = get_input("Name des Entra ID Tenant (z.B.: COUNT IT) eingeben: ")
+    entraid_name = get_input("Name des Entra ID Tenant: ")
     url = get_input("Bibliotheks ID URL eingeben: ")
 
     # Verarbeite die URL
