@@ -1,2 +1,2 @@
-Python faulheit.py
+Python laziness.py
 pause
