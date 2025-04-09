@@ -226,11 +226,11 @@ finally {{
     return ps_script
 
 def main():
-    web_title = get_input("Name der SharePoint Bibliothek (z.B.: Kunde 123 Datenaustausch) eingeben: ")
-    list_title = get_input("Name der SharePoint Seite (z.B.: Documents) eingeben: ")
-    entraid_name = get_input("Name des Entra ID Tenant: ")
-    url = get_input("Bibliotheks ID URL eingeben: ")
-
+    web_title = get_input("enter Name of the SharePoint Library (e.g.: Contoso File Sharing): ")
+    list_title = get_input("enter Name of the SharePoint Library (e.g.: Documents): ")
+    entraid_name = get_input("Name of the Entra ID Tenant on which the library is located: ")
+    url = get_input("enter Library Sync URL: ")
+    
     # Verarbeite die URL
     site_id, web_id, list_id, web_url, kurzname, folder_id = process_url(url)
 
@@ -247,7 +247,7 @@ def main():
     }
 
     # Prüfe, ob der Ordner existiert, andernfalls erstellen
-    folder = "fertige Scripts"
+    folder = "ready-made scripts"
     if not os.path.exists(folder):
         os.makedirs(folder)
 
@@ -256,9 +256,9 @@ def main():
 
     # Überprüfen, ob die Datei bereits existiert
     if os.path.exists(file_name):
-        overwrite = get_input(f"Die Datei {file_name} existiert bereits. Soll sie ersetzt werden? (y/n): ")
+        overwrite = get_input(f"The File {file_name} already exists. Should it be replaced? (y/n): ")
         if overwrite.lower() != 'y':
-            print("Das Skript wird nicht überschrieben. Ende.")
+            print("The script is not overwritten. The End")
             return
 
     # PowerShell-Skript erstellen
@@ -268,10 +268,10 @@ def main():
     with open(file_name, 'w') as file:
         file.write(ps_script)
 
-    print(f"Das PowerShell-Skript wurde unter {file_name} gespeichert.")
+    print(f"The PowerShell script was saved under {file_name}")
 
     # Gebe verwendete Parameter aus
-    print("\nVerwendete Parameter:")
+    print("\nparameters used:")
     for key, value in params.items():
         print(f"{key}: {value}")
 
@@ -283,7 +283,7 @@ def main():
 
     # Zeige den Hinweistext an
     print(f"""
-Intune will now open. Create a script there with the following name. For example SP_Sync_{shortname}
+Intune will now open. Create a script there with the following name. For example SP_Sync_{kurzname}
 In the next step, select the script that has been created.
 leave Run this script using the logged on credentials on Yes
 set Enforce script signature check auf No 
