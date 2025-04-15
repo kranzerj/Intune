@@ -1,4 +1,7 @@
 #use this as a Intune Win32App
+#Detection rule: C:\Program Files\WindowsPowerShell\Modules\HPCMSL\HPCMSL.psd1  exists
+
+
 
 # URL der Zielseite
 $targetUrl = "https://www.hp.com/us-en/solutions/client-management-solutions/download.html"
