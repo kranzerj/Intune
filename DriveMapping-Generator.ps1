@@ -1,4 +1,5 @@
 #Requires -Version 5.1
+#pwsh -ExecutionPolicy Bypass -File ".\DriveMapping-Generator.ps1"
 
 <#
 .SYNOPSIS
